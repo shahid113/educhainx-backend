@@ -73,8 +73,8 @@ exports.login = async (req, res) => {
     // Set token in HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true on Render only
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      secure:true,
+      sameSite:'None',
       path: '/',
       maxAge: 60 * 60 * 1000 // 1 hour
     });
@@ -90,8 +90,9 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
     res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure:true,
+    sameSite:'None',
+    path:'/'
   });
   res.json({ message: 'Logout successful' });
 };
