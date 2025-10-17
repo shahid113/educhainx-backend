@@ -3,7 +3,7 @@ const blockchainService = require('../services/BlockchainService');
 const { ethers } = require('ethers');
 const Institute = require('../models/Institute');
 const Certificate = require('../models/Certificate');
-const {Nonce} = require('../models/Nonce');
+const { Nonce } = require('../models/Nonce');
 
 
 exports.nonce = async (req, res) => {
@@ -57,13 +57,13 @@ exports.login = async (req, res) => {
     // Find the institute in the database to get its _id
     const institute = await Institute.findOne({ walletAddress: walletAddress });
     if (!institute) {
-        return res.status(404).json({ message: 'Institute not found in our database.' });
+      return res.status(404).json({ message: 'Institute not found in our database.' });
     }
 
     // Generate JWT token with walletAddress AND _id
-    const payload = { 
-        walletAddress: institute.walletAddress,
-        _id: institute._id // <-- The crucial addition
+    const payload = {
+      walletAddress: institute.walletAddress,
+      _id: institute._id // <-- The crucial addition
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
@@ -73,6 +73,9 @@ exports.login = async (req, res) => {
     // Set token in HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // true on Render only
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      path: '/',
       maxAge: 60 * 60 * 1000 // 1 hour
     });
 
@@ -92,7 +95,7 @@ exports.logout = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     // 1. Check for the institute's _id from the middleware-decoded token.
-    if (!req.institute || !req.institute._id || !req.institute.walletAddress ) {
+    if (!req.institute || !req.institute._id || !req.institute.walletAddress) {
       return res.status(401).json({ error: 'Authentication error. Institute ID not found in token.' });
     }
 
@@ -103,7 +106,7 @@ exports.getProfile = async (req, res) => {
     }
 
     res.status(200).json(institute);
-    
+
   } catch (err) {
     console.error('Error fetching institute profile:', err);
     res.status(500).json({ error: 'Server error while fetching profile.' });
@@ -126,7 +129,7 @@ exports.issueCertificate = async (req, res) => {
       degree,
       transactionHash,
     } = req.body;
-    
+
     if (
       !certificateNo ||
       !dateofIssue ||
@@ -168,7 +171,7 @@ exports.fetchallCertificates = async (req, res) => {
 
     // Securely fetch certificates using the ID from the token, NOT from URL params
     const certificates = await Certificate.find({ instituteId: req.institute._id })
-                                            .sort({ createdAt: -1 }); 
+      .sort({ createdAt: -1 });
 
     if (!certificates || certificates.length === 0) {
       return res.status(200).json({ message: 'No certificates found for this institute.', data: [] });
