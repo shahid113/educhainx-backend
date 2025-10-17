@@ -11,10 +11,8 @@ const verifierRoutes = require('./routes/verifierRoutes');
 const app = express();
 
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true); // allow all origins dynamically
-  },
-  credentials: true, // allow cookies/authorization headers
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
 }));
 
 app.use(express.json());
