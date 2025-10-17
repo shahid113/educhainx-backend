@@ -9,6 +9,6 @@ router.post('/add-institute', governmentMiddleware, instituteRegister);
 router.get('/get-institute', governmentMiddleware, getInstitutes);
 router.put('/approve-institute', governmentMiddleware, approve);
 router.put('/revoke-institute', governmentMiddleware, revoke);
-router.post('/logout', logout );
+router.post('/logout', governmentMiddleware, logout );
 
 module.exports = router;

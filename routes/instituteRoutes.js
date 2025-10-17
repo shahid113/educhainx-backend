@@ -5,7 +5,7 @@ const { instituteMiddleware } = require('../middleware/instituteMiddleware');
 
 router.post('/nonce', nonce)
 router.post('/login', login);
-router.post('/logout', logout);
+router.post('/logout', instituteMiddleware, logout);
 router.get('/profile', instituteMiddleware, getProfile);
 router.post('/issue-certificate', instituteMiddleware, issueCertificate);
 router.get('/fetch-certificates', instituteMiddleware, fetchallCertificates);
