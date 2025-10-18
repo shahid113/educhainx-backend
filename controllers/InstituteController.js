@@ -6,6 +6,9 @@ const Certificate = require('../models/Certificate');
 const { Nonce } = require('../models/Nonce');
 
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+
 exports.nonce = async (req, res) => {
   const { walletAddress } = req.body;
   if (!walletAddress) return res.status(400).json({ message: "Wallet required" });
@@ -73,8 +76,8 @@ exports.login = async (req, res) => {
     // Set token in HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure:true,
-      sameSite:'None',
+      secure:isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
       path: '/',
       maxAge: 60 * 60 * 1000 // 1 hour
     });
@@ -90,8 +93,8 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
     res.clearCookie('token', {
     httpOnly: true,
-    secure:true,
-    sameSite:'None',
+    secure:isProduction,
+    sameSite:isProduction ? 'None' : 'Lax',
     path:'/'
   });
   res.json({ message: 'Logout successful' });

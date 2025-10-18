@@ -4,6 +4,8 @@ const Institute = require('../models/Institute');
 const BlockchainService = require('../services/BlockchainService');
 const { ethers } = require('ethers');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -32,9 +34,10 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure:true,
-      sameSite:'None',
+      secure:isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
       maxAge: 60 * 60 * 1000, // 1 hour
+      path:'/'
     });
 
     res.json({ message: 'Login successful', role: 'government' });
@@ -47,8 +50,8 @@ exports.login = async (req, res) => {
 exports.logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure:true,
-    sameSite:'None',
+    secure:isProduction,
+    sameSite:isProduction ? 'None' : 'Lax',
     path:'/'
   });
   res.json({ message: 'Logout successful' });
