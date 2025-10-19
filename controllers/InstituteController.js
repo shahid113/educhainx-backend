@@ -4,6 +4,7 @@ const { ethers } = require('ethers');
 const Institute = require('../models/Institute');
 const Certificate = require('../models/Certificate');
 const { Nonce } = require('../models/Nonce');
+const { v4: uuidv4 } = require('uuid');
 
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -139,7 +140,6 @@ exports.issueCertificate = async (req, res) => {
     } = req.body;
 
     if (
-      !certificateNo ||
       !dateofIssue ||
       !name ||
       !enrolmentNo ||
@@ -148,6 +148,10 @@ exports.issueCertificate = async (req, res) => {
       !transactionHash
     ) {
       return res.status(400).json({ error: 'Missing required certificate fields.' });
+    }
+
+    if(!certificateNo){
+      certificateNo = uuidv4(); // Generate a new UUID for the certificate number
     }
 
     const certificate = new Certificate({
@@ -170,6 +174,33 @@ exports.issueCertificate = async (req, res) => {
   }
 };
 
+// exports.fetchallCertificates = async (req, res) => {
+//   try {
+//     // Ensure the authenticated institute's ID is present from the token
+//     if (!req.institute || !req.institute._id) {
+//       return res.status(401).json({ message: 'Unauthorized access. Institute ID not found in token.' });
+//     }
+
+//     // Securely fetch certificates using the ID from the token, NOT from URL params
+//     const certificates = await Certificate.find({ instituteId: req.institute._id })
+//       .sort({ createdAt: -1 });
+
+//     if (!certificates || certificates.length === 0) {
+//       return res.status(200).json({ message: 'No certificates found for this institute.', data: [] });
+//     }
+
+//     res.status(200).json({
+//       message: 'Certificates fetched successfully',
+//       count: certificates.length,
+//       data: certificates
+//     });
+//   } catch (err) {
+//     console.error('Error fetching certificates:', err);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+
 exports.fetchallCertificates = async (req, res) => {
   try {
     // Ensure the authenticated institute's ID is present from the token
@@ -177,12 +208,16 @@ exports.fetchallCertificates = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized access. Institute ID not found in token.' });
     }
 
-    // Securely fetch certificates using the ID from the token, NOT from URL params
+    // Fetch certificates with full institute details
     const certificates = await Certificate.find({ instituteId: req.institute._id })
+      .populate('instituteId') // Populate ALL fields from Institute model
       .sort({ createdAt: -1 });
 
     if (!certificates || certificates.length === 0) {
-      return res.status(200).json({ message: 'No certificates found for this institute.', data: [] });
+      return res.status(200).json({
+        message: 'No certificates found for this institute.',
+        data: []
+      });
     }
 
     res.status(200).json({
@@ -195,5 +230,6 @@ exports.fetchallCertificates = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 

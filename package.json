@@ -15,7 +15,8 @@
     "ethers": "^6.15.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1"
+    "mongoose": "^8.19.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
