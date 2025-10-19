@@ -123,78 +123,61 @@ exports.getProfile = async (req, res) => {
 
 exports.issueCertificate = async (req, res) => {
   try {
-    // Ensure middleware attached institute info. This object should contain the _id.
+    // Ensure institute info from middleware
     if (!req.institute || !req.institute._id) {
       return res.status(401).json({ message: 'Unauthorized access. Institute not found in token.' });
     }
 
-    const {
-      certificateNo,
-      dateofIssue,
-      name,
-      enrolmentNo,
-      graduationYear,
-      degree,
-      transactionHash,
-    } = req.body;
+    const { certificates } = req.body;
 
-    if (
-      !certificateNo ||
-      !dateofIssue ||
-      !name ||
-      !enrolmentNo ||
-      !graduationYear ||
-      !degree ||
-      !transactionHash
-    ) {
-      return res.status(400).json({ error: 'Missing required certificate fields.' });
+    if (!certificates || !Array.isArray(certificates) || certificates.length === 0) {
+      return res.status(400).json({ error: 'No certificates provided.' });
     }
 
-    const certificate = new Certificate({
-      certificateNo,
-      dateofIssue,
-      name,
-      enrolmentNo,
-      graduationYear,
-      degree,
-      instituteId: req.institute._id,
-      transactionHash
+    // Validate each certificate
+    for (const cert of certificates) {
+      const {
+        certificateNo,
+        dateofIssue,
+        name,
+        enrolmentNo,
+        graduationYear,
+        degree,
+        transactionHash,
+      } = cert;
+
+      if (
+        !certificateNo ||
+        !dateofIssue ||
+        !name ||
+        !enrolmentNo ||
+        !graduationYear ||
+        !degree ||
+        !transactionHash
+      ) {
+        return res.status(400).json({ error: 'Missing required certificate fields in one or more certificates.' });
+      }
+    }
+
+    // Attach instituteId
+    const certDocs = certificates.map(cert => ({
+      ...cert,
+      instituteId: req.institute._id
+    }));
+
+    // Bulk insert
+    const savedCertificates = await Certificate.insertMany(certDocs);
+
+    res.status(201).json({
+      message: `${savedCertificates.length} certificate(s) issued successfully.`,
+      certificates: savedCertificates
     });
-
-    await certificate.save();
-
-    res.status(201).json({ message: 'Certificate issued successfully.', certificate });
   } catch (err) {
     console.error('Error issuing certificate:', err);
     res.status(500).json({ error: 'Server error while issuing certificate.' });
   }
 };
 
-// exports.fetchallCertificates = async (req, res) => {
-//   try {
-//     // Ensure the authenticated institute's ID is present from the token
-//     if (!req.institute || !req.institute._id) {
-//       return res.status(401).json({ message: 'Unauthorized access. Institute ID not found in token.' });
-//     }
-
-//     // Securely fetch certificates using the ID from the token, NOT from URL params
-//     const certificates = await Certificate.find({ instituteId: req.institute._id })
-//       .sort({ createdAt: -1 });
-
-//     if (!certificates || certificates.length === 0) {
-//       return res.status(200).json({ message: 'No certificates found for this institute.', data: [] });
-//     }
-
-//     res.status(200).json({
-//       message: 'Certificates fetched successfully',
-//       count: certificates.length,
-//       data: certificates
-//     });
-//   } catch (err) {
-//     console.error('Error fetching certificates:', err);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// };
 
 
 exports.fetchallCertificates = async (req, res) => {

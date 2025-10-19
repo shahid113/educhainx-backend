@@ -131,7 +131,8 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -150,7 +151,8 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -169,7 +171,8 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -182,7 +185,8 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -233,17 +237,17 @@ class BlockchainService {
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "certHash",
-          "type": "bytes32"
+          "internalType": "bytes32[]",
+          "name": "certHashes",
+          "type": "bytes32[]"
         },
         {
-          "internalType": "string",
-          "name": "metadata",
-          "type": "string"
+          "internalType": "string[]",
+          "name": "metadataList",
+          "type": "string[]"
         }
       ],
-      "name": "storeCertificateHash",
+      "name": "storeCertificateHashes",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -282,7 +286,8 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -295,10 +300,10 @@ class BlockchainService {
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
-  
-    ],
+  ],
     this.contract = new ethers.Contract(this.contractAddress, this.ABI, this.provider);
   }
 
@@ -314,8 +319,8 @@ class BlockchainService {
     return tx.hash;
   }
 
-  async storeCertificateHash(certHash, metadata, signer) {
-    const tx = await this.contract.connect(signer).storeCertificateHash(certHash, metadata);
+  async storeCertificateHash(certHashes, metadataList, signer) {
+    const tx = await this.contract.connect(signer).storeCertificateHashes(certHashes, metadataList);
     await tx.wait();
     return tx.hash;
   }
