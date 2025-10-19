@@ -121,11 +121,16 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+const mongoose = require('mongoose');
+const Certificate = require('../models/Certificate'); // adjust path as needed
+
 exports.issueCertificate = async (req, res) => {
   try {
     // Ensure institute info from middleware
     if (!req.institute || !req.institute._id) {
-      return res.status(401).json({ message: 'Unauthorized access. Institute not found in token.' });
+      return res.status(401).json({
+        message: 'Unauthorized access. Institute not found in token.'
+      });
     }
 
     const { certificates } = req.body;
@@ -134,7 +139,7 @@ exports.issueCertificate = async (req, res) => {
       return res.status(400).json({ error: 'No certificates provided.' });
     }
 
-    // Validate each certificate
+    // Validate fields
     for (const cert of certificates) {
       const {
         certificateNo,
@@ -143,7 +148,7 @@ exports.issueCertificate = async (req, res) => {
         enrolmentNo,
         graduationYear,
         degree,
-        transactionHash,
+        transactionHash
       } = cert;
 
       if (
@@ -155,7 +160,10 @@ exports.issueCertificate = async (req, res) => {
         !degree ||
         !transactionHash
       ) {
-        return res.status(400).json({ error: 'Missing required certificate fields in one or more certificates.' });
+        return res.status(400).json({
+          error:
+            'Missing required fields in one or more certificates. Please check all input values.'
+        });
       }
     }
 
@@ -165,18 +173,69 @@ exports.issueCertificate = async (req, res) => {
       instituteId: req.institute._id
     }));
 
-    // Bulk insert
-    const savedCertificates = await Certificate.insertMany(certDocs);
+    // Try to insert all documents
+    const savedCertificates = await Certificate.insertMany(certDocs, {
+      ordered: false // allow valid inserts even if some fail
+    });
 
     res.status(201).json({
       message: `${savedCertificates.length} certificate(s) issued successfully.`,
       certificates: savedCertificates
     });
+
   } catch (err) {
     console.error('Error issuing certificate:', err);
-    res.status(500).json({ error: 'Server error while issuing certificate.' });
+
+    // --- HANDLE DUPLICATE KEY ERRORS (unique: true) ---
+    if (err.code === 11000 || (err.name === 'BulkWriteError' && err.code === 11000)) {
+      // Single document duplicate
+      const field = Object.keys(err.keyValue || {})[0];
+      const value = err.keyValue ? err.keyValue[field] : 'Unknown';
+
+      return res.status(400).json({
+        error: `Duplicate entry: '${field}' with value '${value}' already exists.`,
+        field,
+        value
+      });
+    }
+
+    // --- HANDLE BULK DUPLICATES ---
+    if (err.name === 'BulkWriteError' && Array.isArray(err.writeErrors)) {
+      const duplicates = err.writeErrors
+        .filter(e => e.code === 11000)
+        .map(e => {
+          const field = Object.keys(e.err.keyValue || {})[0];
+          const value = e.err.keyValue ? e.err.keyValue[field] : 'Unknown';
+          return { field, value };
+        });
+
+      if (duplicates.length > 0) {
+        // Group duplicate messages nicely
+        const detailed = duplicates
+          .map(d => `Field '${d.field}' with value '${d.value}' already exists.`)
+          .join(' | ');
+
+        return res.status(400).json({
+          error: 'Duplicate key constraint violation.',
+          details: detailed,
+          duplicates
+        });
+      }
+    }
+
+    // --- OTHER VALIDATION ERRORS ---
+    if (err instanceof mongoose.Error.ValidationError) {
+      const messages = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ error: 'Validation error.', details: messages });
+    }
+
+    // --- FALLBACK ---
+    return res.status(500).json({
+      error: 'Unexpected server error while issuing certificates. Please try again later.'
+    });
   }
 };
+
 
 
 

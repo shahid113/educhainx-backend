@@ -4,7 +4,7 @@ const certificateSchema = new mongoose.Schema({
   certificateNo: { type: String, required: true, unique: true },
   dateofIssue: { type: Date, required: true },
   name: { type: String, required: true },
-  enrolmentNo: { type: String, required: true },
+  enrolmentNo: { type: String, required: true, unique:true},
   graduationYear: { type: Number, required: true },
   degree: { type: String, required: true },
   instituteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Institute', required: true },
