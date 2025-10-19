@@ -121,8 +121,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-const mongoose = require('mongoose');
-const Certificate = require('../models/Certificate'); // adjust path as needed
 
 exports.issueCertificate = async (req, res) => {
   try {
