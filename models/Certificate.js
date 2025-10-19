@@ -8,7 +8,7 @@ const certificateSchema = new mongoose.Schema({
   graduationYear: { type: Number, required: true },
   degree: { type: String, required: true },
   instituteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Institute', required: true },
-  transactionHash: { type: String, required: true, unique: true },
+  transactionHash: { type: String, required: true},
   createdAt: { type: Date, default: Date.now }
 });
 
