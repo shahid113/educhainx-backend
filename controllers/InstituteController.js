@@ -4,7 +4,6 @@ const { ethers } = require('ethers');
 const Institute = require('../models/Institute');
 const Certificate = require('../models/Certificate');
 const { Nonce } = require('../models/Nonce');
-const { v4: uuidv4 } = require('uuid');
 
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -140,6 +139,7 @@ exports.issueCertificate = async (req, res) => {
     } = req.body;
 
     if (
+      !certificateNo ||
       !dateofIssue ||
       !name ||
       !enrolmentNo ||
@@ -148,10 +148,6 @@ exports.issueCertificate = async (req, res) => {
       !transactionHash
     ) {
       return res.status(400).json({ error: 'Missing required certificate fields.' });
-    }
-
-    if(!certificateNo){
-      certificateNo = uuidv4(); // Generate a new UUID for the certificate number
     }
 
     const certificate = new Certificate({
@@ -210,7 +206,7 @@ exports.fetchallCertificates = async (req, res) => {
 
     // Fetch certificates with full institute details
     const certificates = await Certificate.find({ instituteId: req.institute._id })
-      .populate('instituteId') // Populate ALL fields from Institute model
+      .populate('instituteId') //  Populate ALL fields from Institute model
       .sort({ createdAt: -1 });
 
     if (!certificates || certificates.length === 0) {
