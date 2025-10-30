@@ -47,6 +47,37 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.getProfile=async(req, res)=>{
+   try{
+    const userId= req.government && req.government.id;
+    
+    if(!userId){
+        return res.status(401).json(
+          {message : 'Unauthorized Access'}
+        )
+    }
+
+    const user=await User.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      user
+    });
+
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching profile'
+    });
+  }
+
+}
+
 exports.logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,

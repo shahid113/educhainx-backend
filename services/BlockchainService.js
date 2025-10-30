@@ -303,7 +303,7 @@ class BlockchainService {
       "type": "function",
       "constant": true
     }
-  ],
+    ],
     this.contract = new ethers.Contract(this.contractAddress, this.ABI, this.provider);
   }
 
