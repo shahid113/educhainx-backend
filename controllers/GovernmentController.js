@@ -32,7 +32,7 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.cookie('token', token, {
+    res.cookie('govt_token', token, {
       httpOnly: true,
       secure:isProduction,
       sameSite: isProduction ? 'None' : 'Lax',
@@ -79,7 +79,7 @@ exports.getProfile=async(req, res)=>{
 }
 
 exports.logout = (req, res) => {
-  res.clearCookie('token', {
+  res.clearCookie('govt_token', {
     httpOnly: true,
     secure:isProduction,
     sameSite:isProduction ? 'None' : 'Lax',

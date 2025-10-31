@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 exports.governmentMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
+    const token = req.cookies?.govt_token || req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
       return res
         .status(401)
