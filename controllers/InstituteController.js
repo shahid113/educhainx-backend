@@ -121,6 +121,59 @@ exports.getProfile = async (req, res) => {
 };
 
 
+exports.updateProfile = async (req, res) => {
+  try {
+    if (!req.institute || !req.institute._id) {
+      return res.status(401).json({ error: 'Authentication error. Institute ID not found in token.' });
+    }
+
+    // Allowed fields user can update
+    const allowedFields = [
+      'name',
+      'type',
+      'instituteCode',
+      'email',
+      'address',
+      'district',
+      'state',
+      'country',
+      'degrees',
+      'departments',
+      'logo'
+    ];
+
+    const updates = {};
+
+    // Apply only allowed fields from request body
+    Object.keys(req.body).forEach(key => {
+      if (allowedFields.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update.' });
+    }
+
+    const updatedInstitute = await Institute.findByIdAndUpdate(
+      req.institute._id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select('-__v');
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      profile: updatedInstitute
+    });
+
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Server error while updating profile.' });
+  }
+};
+
+
+
 exports.issueCertificate = async (req, res) => {
   try {
     // Ensure institute info from middleware
