@@ -5,7 +5,6 @@ const Institute = require('../models/Institute');
 const Certificate = require('../models/Certificate');
 const { Nonce } = require('../models/Nonce');
 
-
 const isProduction = process.env.NODE_ENV === 'production';
 
 
@@ -146,6 +145,7 @@ exports.issueCertificate = async (req, res) => {
         enrolmentNo,
         graduationYear,
         degree,
+        department,
         transactionHash
       } = cert;
 
@@ -156,6 +156,7 @@ exports.issueCertificate = async (req, res) => {
         !enrolmentNo ||
         !graduationYear ||
         !degree ||
+        !department ||
         !transactionHash
       ) {
         return res.status(400).json({
@@ -266,6 +267,5 @@ exports.fetchallCertificates = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
 
 
