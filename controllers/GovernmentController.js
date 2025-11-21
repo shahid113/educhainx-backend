@@ -91,38 +91,28 @@ exports.logout = (req, res) => {
 exports.instituteRegister = async (req, res) => {
   const {
     name,
-    type,
-    instituteCode,
     email,
-    walletAddress,
-    address,
-    district,
-    state,
-    country
+    instituteCode,
+    walletAddress
   } = req.body;
 
   // Basic validation
-  if (!name || !type || !instituteCode || !email || !walletAddress || !address || !district || !state) {
+  if (!name || !email|| !instituteCode ||!walletAddress) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
   try {
     // Check for duplicates
-    const existing = await Institute.findOne({ $or: [{ instituteCode }, { email }, { walletAddress }] });
+    const existing = await Institute.findOne({ $or: [{ instituteCode },{ walletAddress }] });
     if (existing) {
       return res.status(400).json({ success: false, message: 'Institute already registered' });
     }
 
     const institute = new Institute({
       name,
-      type,
-      instituteCode,
       email,
-      walletAddress,
-      address,
-      district,
-      state,
-      country
+      instituteCode,
+      walletAddress
     });
 
     await institute.save();

@@ -130,13 +130,7 @@ exports.updateProfile = async (req, res) => {
     // Allowed fields user can update
     const allowedFields = [
       'name',
-      'type',
-      'instituteCode',
       'email',
-      'address',
-      'district',
-      'state',
-      'country',
       'degrees',
       'departments',
       'logo'
