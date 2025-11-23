@@ -89,23 +89,73 @@ exports.logout = (req, res) => {
 }
 
 exports.instituteRegister = async (req, res) => {
-  const {
-    name,
-    email,
-    instituteCode,
-    walletAddress
-  } = req.body;
-
-  // Basic validation
-  if (!name || !email|| !instituteCode ||!walletAddress) {
-    return res.status(400).json({ success: false, message: 'Missing required fields' });
-  }
-
   try {
-    // Check for duplicates
-    const existing = await Institute.findOne({ $or: [{ instituteCode },{ walletAddress }] });
+    // ---------------------
+    // BULK ENTRY (Array)
+    // ---------------------
+    if (Array.isArray(req.body.bulk)) {
+      const bulkData = req.body.bulk;
+
+      // Validate each entry
+      for (const inst of bulkData) {
+        if (!inst.name || !inst.email || !inst.instituteCode || !inst.walletAddress) {
+          return res.status(400).json({
+            success: false,
+            message: "Each institute must include name, email, instituteCode, and walletAddress"
+          });
+        }
+      }
+
+      // Check duplicates in DB
+      const instituteCodes = bulkData.map(i => i.instituteCode);
+      const walletAddresses = bulkData.map(i => i.walletAddress);
+
+      const existing = await Institute.find({
+        $or: [
+          { instituteCode: { $in: instituteCodes } },
+          { walletAddress: { $in: walletAddresses } }
+        ]
+      });
+
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Some institutes already exist",
+          duplicates: existing
+        });
+      }
+
+      // Insert all
+      await Institute.insertMany(bulkData);
+
+      return res.json({
+        success: true,
+        message: "Bulk registration completed",
+        count: bulkData.length
+      });
+    }
+
+    // ---------------------
+    // SINGLE ENTRY
+    // ---------------------
+    const { name, email, instituteCode, walletAddress } = req.body;
+
+    if (!name || !email || !instituteCode || !walletAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields"
+      });
+    }
+
+    const existing = await Institute.findOne({
+      $or: [{ instituteCode }, { walletAddress }]
+    });
+
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Institute already registered' });
+      return res.status(400).json({
+        success: false,
+        message: "Institute already registered"
+      });
     }
 
     const institute = new Institute({
@@ -116,11 +166,20 @@ exports.instituteRegister = async (req, res) => {
     });
 
     await institute.save();
-    res.json({ success: true, message: 'Registration submitted' });
+
+    res.json({
+      success: true,
+      message: "Registration submitted"
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 };
+
 
 
 exports.getInstitutes = async (req, res) => {
